@@ -1,6 +1,7 @@
 package org.example.Task1;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -10,13 +11,23 @@ public class ShipmentDocumentCalculator {
     /**
      * Суммарная стоимость товаров, попадающих в список промо-акции.
      */
-    public double promoSum(ShipmentDocument doc, String[] promoArticles) {
+    public double promoSum(ShipmentDocument doc, String[] promoArticles, double discountPercent) {
         HashSet<String> promo = new HashSet<>(Arrays.asList(promoArticles));
         List<ShipmentLine> lines = doc.getLines();
         BigDecimal sum = BigDecimal.ZERO;
+        boolean isSale = doc.getType() == ShipmentDocument.DocumentType.SALE;
+
         for (ShipmentLine line : lines) {
             if (promo.contains(line.getItem().getArticle())) {
-                sum = sum.add(line.amount());
+                BigDecimal amount = line.amount();
+                if (isSale) {
+                    BigDecimal discountCoefficient = BigDecimal.ONE.subtract(
+                            BigDecimal.valueOf(discountPercent)
+                                    .divide(BigDecimal.valueOf(100)));
+                    amount = amount.multiply(discountCoefficient)
+                            .setScale(2, RoundingMode.HALF_UP);
+                }
+                sum = sum.add(amount);
             }
         }
         return sum.doubleValue();
