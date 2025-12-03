@@ -22,12 +22,4 @@ public class MovementDocument extends ShipmentDocument {
 
     @Override
     public DocumentType getType() { return DocumentType.MOVEMENT; }
-
-    /**
-     * Является ли перемещение внутренним (между складами одного владельца).
-     * Для продаж неприменимо!
-     */
-    boolean isInternalMovement() {
-        return getStorage().getOwner().equals(movingStorage.getOwner());
-    }
 }
