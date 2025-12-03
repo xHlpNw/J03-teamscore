@@ -11,11 +11,9 @@ class ShipmentDocument {
     String documentId; // GUID документа
     Date documentDate; // дата документа
     String documentType; // тип отгрузки: sale - продажа, moving - перемещение
-    String storage; // название склада отгрузки
-    String storageOwner; // владелец склада отгрузки
+    Storage storage; // название склада отгрузки
     String customer; // получатель (только для продажи)
-    String movingStorage; // название склада получения (только для перемещения)
-    String movingStrageOwner; // владелец склада получения (только для перемещения)
+    Storage movingStorage; // название склада получения (только для перемещения)
     int itemsCount; // количество товаров в документе
     private final List<ShipmentLine> lines = new ArrayList<>();
 
@@ -66,12 +64,12 @@ class ShipmentDocument {
         }
         BigDecimal sumQuantity = BigDecimal.ZERO;
         for (ShipmentLine line : lines) {
-            if (line.getQuantity().doubleValue() >= minQuantity) {
+            if (line.getQuantity().compareTo(BigDecimal.valueOf(minQuantity)) >= 0) {
                 return true;
             }
             sumQuantity = sumQuantity.add(line.getQuantity());
         }
-        return sumQuantity.doubleValue() >= minQuantity;
+        return sumQuantity.compareTo(BigDecimal.valueOf(minQuantity)) >= 0;
     }
 
     /**
@@ -79,6 +77,6 @@ class ShipmentDocument {
      * Для продаж неприменимо!
      */
     boolean isInternalMovement() {
-        return documentType.equals("moving") && storageOwner.equals(movingStrageOwner);
+        return documentType.equals("moving") && storage.getOwner().equals(movingStorage.getOwner());
     }
 }
