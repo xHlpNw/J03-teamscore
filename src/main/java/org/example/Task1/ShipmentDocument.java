@@ -1,21 +1,22 @@
 package org.example.Task1;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 
 /**
  * Документ отгрузки со склада.
  * Бывает двух типов: перемещение (на другой склад) и продажа (покупателю).
  */
-class ShipmentDocument {
-    String documentId; // GUID документа
-    Date documentDate; // дата документа
-    String documentType; // тип отгрузки: sale - продажа, moving - перемещение
-    Storage storage; // название склада отгрузки
-    String customer; // получатель (только для продажи)
-    Storage movingStorage; // название склада получения (только для перемещения)
-    int itemsCount; // количество товаров в документе
-    private final List<ShipmentLine> lines = new ArrayList<>();
+@RequiredArgsConstructor
+public abstract class ShipmentDocument {
+    private final String id; // GUID документа
+    private final LocalDate date; // дата документа
+    private final Storage storage; // название склада отгрузки
+    private final List<ShipmentLine> lines;
 
     /**
      * Суммарная стоимость товаров в документе.
@@ -55,28 +56,36 @@ class ShipmentDocument {
     }
 
     /**
-     * Является ли продажа оптовой для переданного минимального объема.
-     * Для перемещений неприменимо!
+     * Тип документа
+     * SALE - продажа
+     * MOVEMENT - перемещение
      */
-    boolean isWholesale(double minQuantity) {
-        if (documentType.equals("moving")) {
-            return false;
-        }
-        BigDecimal sumQuantity = BigDecimal.ZERO;
-        for (ShipmentLine line : lines) {
-            if (line.getQuantity().compareTo(BigDecimal.valueOf(minQuantity)) >= 0) {
-                return true;
-            }
-            sumQuantity = sumQuantity.add(line.getQuantity());
-        }
-        return sumQuantity.compareTo(BigDecimal.valueOf(minQuantity)) >= 0;
+    public enum DocumentType {
+        SALE,
+        MOVEMENT
     }
 
-    /**
-     * Является ли перемещение внутренним (между складами одного владельца).
-     * Для продаж неприменимо!
-     */
-    boolean isInternalMovement() {
-        return documentType.equals("moving") && storage.getOwner().equals(movingStorage.getOwner());
+    public abstract DocumentType getType();
+
+    public final String getId() { return id; }
+
+    public final LocalDate getDate() { return date; }
+
+    public final Storage getStorage() { return storage; }
+
+    public final List<ShipmentLine> getLines() { return lines; }
+
+    public final void addLine(ShipmentLine line) {
+        lines.add(line);
     }
+
+    public final void removeLine(ShipmentLine line) {
+        lines.remove(line);
+    }
+
+    public final ShipmentLine getLine(int index) {
+        return lines.get(index);
+    }
+
+    public final double getItemsCount() { return lines.size(); }
 }
