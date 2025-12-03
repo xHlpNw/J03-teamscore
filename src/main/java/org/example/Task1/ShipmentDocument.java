@@ -1,11 +1,11 @@
 package org.example.Task1;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
  * Документ отгрузки со склада.
  * Бывает двух типов: перемещение (на другой склад) и продажа (покупателю).
- *
  */
 class ShipmentDocument {
     String documentId; // GUID документа
@@ -17,30 +17,26 @@ class ShipmentDocument {
     String movingStorage; // название склада получения (только для перемещения)
     String movingStrageOwner; // владелец склада получения (только для перемещения)
     int itemsCount; // количество товаров в документе
-    String[] itemsId; // список GUID товаров
-    String[] itemsArticle; // список артикулов товаров
-    String[] itemsTitle; // список наваний товаров
-    double[] itemsQuantity; // список количества шт. товаров
-    double[] itemsPrice; // список цен товаров
+    private final List<ShipmentLine> lines = new ArrayList<>();
 
     /**
      * Суммарная стоимость товаров в документе.
      */
     double totalAmount() {
-        double sum = 0;
-        for (int i = 0; i < itemsCount; i++) {
-            sum += Math.round(itemsQuantity[i] * itemsPrice[i] * 100) / 100.0;
+        BigDecimal sum = BigDecimal.ZERO;
+        for (ShipmentLine line : lines) {
+            sum = sum.add(line.amount());
         }
-        return sum;
+        return sum.doubleValue();
     }
 
     /**
      * Стоимость товара с переданным id.
      */
     double itemAmount(String id) {
-        for (int i = 0; i < itemsCount; i++) {
-            if (itemsId[i] == id) {
-                return Math.round(itemsQuantity[i] * itemsPrice[i] * 100) / 100.0;
+        for (ShipmentLine line : lines) {
+            if (Objects.equals(line.getItem().getId(), id)) {
+                return line.amount().doubleValue();
             }
         }
         return 0;
@@ -50,16 +46,14 @@ class ShipmentDocument {
      * Суммарная стоимость товаров, попадающих в список промо-акции.
      */
     double promoSum(String[] promoArticles) {
-        double sum = 0;
-        for (int i = 0; i < itemsCount; i++) {
-            for (int j = 0; j < promoArticles.length; j++) {
-                if (itemsArticle[i] == promoArticles[j]) {
-                    sum += Math.round(itemsQuantity[i] * itemsPrice[i] * 100) / 100.0;
-                    break;
-                }
+        HashSet<String> promo = new HashSet<>(Arrays.asList(promoArticles));
+        BigDecimal sum = BigDecimal.ZERO;
+        for (ShipmentLine line : lines) {
+            if (promo.contains(line.getItem().getArticle())) {
+                sum = sum.add(line.amount());
             }
         }
-        return sum;
+        return sum.doubleValue();
     }
 
     /**
@@ -70,14 +64,14 @@ class ShipmentDocument {
         if (documentType.equals("moving")) {
             return false;
         }
-        double sumQuantity = 0;
-        for (int i = 0; i < itemsCount; i++) {
-            if (itemsQuantity[i] >= minQuantity) {
+        BigDecimal sumQuantity = BigDecimal.ZERO;
+        for (ShipmentLine line : lines) {
+            if (line.getQuantity().doubleValue() >= minQuantity) {
                 return true;
             }
-            sumQuantity += itemsQuantity[i];
+            sumQuantity = sumQuantity.add(line.getQuantity());
         }
-        return sumQuantity >= minQuantity;
+        return sumQuantity.doubleValue() >= minQuantity;
     }
 
     /**
