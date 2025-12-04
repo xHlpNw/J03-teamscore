@@ -12,6 +12,8 @@ public class ShipmentDocumentCalculator {
      * Суммарная стоимость товаров, попадающих в список промо-акции.
      */
     public double promoSum(ShipmentDocument doc, String[] promoArticles, double discountPercent) {
+        if (discountPercent < 0 || discountPercent > 100)
+            throw new IllegalArgumentException("Скидка должна быть в диапазоне 0-100%.");
         HashSet<String> promo = new HashSet<>(Arrays.asList(promoArticles));
         List<ShipmentLine> lines = doc.getLines();
         BigDecimal sum = BigDecimal.ZERO;
@@ -38,12 +40,13 @@ public class ShipmentDocumentCalculator {
      */
     public double itemAmount(ShipmentDocument doc, String id) {
         List<ShipmentLine> lines = doc.getLines();
+        BigDecimal amount = BigDecimal.ZERO;
         for (ShipmentLine line : lines) {
             if (Objects.equals(line.getItem().getId(), id)) {
-                return line.amount().doubleValue();
+                amount = amount.add(line.amount());
             }
         }
-        return 0;
+        return amount.doubleValue();
     }
 
     /**
@@ -63,6 +66,8 @@ public class ShipmentDocumentCalculator {
      * Для перемещений неприменимо!
      */
     boolean isWholesale(SaleDocument doc, double minQuantity) {
+        if (!Double.isFinite(minQuantity))
+            throw new IllegalArgumentException("Минимальное коичество должно быть конечным значением");
         List<ShipmentLine> lines = doc.getLines();
         BigDecimal sumQuantity = BigDecimal.ZERO;
         BigDecimal min = BigDecimal.valueOf(minQuantity);
