@@ -29,7 +29,7 @@ public class Dealer extends Supplier {
 
     @Override
     public BigDecimal calculateFinalPrice(BigDecimal basePrice) {
-        return basePrice.multiply(markupPercent)
+        return basePrice.multiply(markupPercent.add(BigDecimal.ONE))
                 .setScale(2, RoundingMode.HALF_UP);
     }
 }
