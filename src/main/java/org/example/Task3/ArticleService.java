@@ -24,7 +24,8 @@ public class ArticleService {
         String lowerCasedTitle = title.toLowerCase();
 
         return articles.values().stream()
-                .filter(article -> article.getTitle().contains(lowerCasedTitle))
+                .filter(article -> article.getTitle().toLowerCase()
+                        .contains(lowerCasedTitle))
                 .map(ArticleMapper::map).toList();
     }
 }
